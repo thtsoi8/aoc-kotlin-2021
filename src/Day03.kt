@@ -1,33 +1,60 @@
-import readInput
-
 fun main() {
     fun part1(input: List<String>): Int {
         val columns = input[0].indices
         val gammaRate = buildString {
             for (column in columns) {
+                
                 val (zeroes, ones) = input.countBitsInColumn(column)
                 val commonBit = if (zeroes > ones) "0" else "1"
                 append(commonBit)
             }
         }
-
-        return gammaRate.toInt(2)
+        val epsilonRate = gammaRate.invertBinaryString()
+        return gammaRate.toInt(2) * epsilonRate.toInt(2)
     }
 
     fun part2(input: List<String>): Int {
-        return input.size
+        fun rating(type: RatingType): String {
+            val columns = input[0].indices
+            var candidates = input
+            for (column in columns) {
+                val (zeroes, ones) = candidates.countBitsInColumn(column)
+                val mostCommon = if (zeroes > ones) '0' else '1'
+                candidates = candidates.filter {
+                    when (type) {
+                        RatingType.OXYGEN -> it[column] == mostCommon
+                        RatingType.CO2 -> it[column] != mostCommon
+                    }
+                }
+                if (candidates.size == 1) break
+            }
+            return candidates.single()
+        }
+
+        return rating(RatingType.OXYGEN).toInt(2) * rating(RatingType.CO2).toInt(2)
     }
 
     // test if implementation meets criteria from the description, like:
-    val testInput = readInput("DayXX_test")
-    check(part1(testInput) == 1)
+    val testInput = readInput("Day03_test")
+    println(part1(testInput))
+    check(part1(testInput) == 198)
 
-    val input = readInput("DayXX")
+    val input = readInput("Day03")
     println(part1(input))
 
-    check(part2(testInput) == 1)
+    println(part2(testInput))
+    check(part2(testInput) == 230)
     println(part2(input))
 }
+
+private enum class RatingType {
+    OXYGEN,
+    CO2
+}
+
+private fun String.invertBinaryString() = this
+    .asIterable()
+    .joinToString("") { if (it == '0') "1" else "0" }
 
 private fun List<String>.countBitsInColumn(column: Int): BitCount {
     var zeroes = 0
